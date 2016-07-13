@@ -10,7 +10,8 @@ The file contained a dataset of steps taken by a subject, sampled at 5 minute in
 
 In processing it, I started out reading activities.csv (the data file) into R studio:
 
-```{r}
+
+```r
 unzip("activity.zip")
 fle <- read.csv("activity.csv")
 ```
@@ -24,27 +25,53 @@ This question led to reducing and reshaping the dataset to a workable and more c
 
 Using Reshape2, I reduced the data table to 61 rows each row totaling the steps taken for each calendar day.
 
-```{r}
+
+```r
 library(reshape2)
 dmelt <- melt(fle, id = "date", measure.vars = "steps")
 SofSteps <- dcast(dmelt, na.rm = T, date ~ variable, sum)
 head(SofSteps)
 ```
 
+```
+##         date steps
+## 1 2012-10-01     0
+## 2 2012-10-02   126
+## 3 2012-10-03 11352
+## 4 2012-10-04 12116
+## 5 2012-10-05 13294
+## 6 2012-10-06 15420
+```
+
 From that data, I rendered histogram for part 1..
 
 *1) Make a histogram of the total number of steps taken each day*
 
-```{r}
+
+```r
 hist(SofSteps$steps, breaks = 5, ylab = "Number of Days", xlab = "Frequency of Steps", col = "blue", main = "Hist of Daily activity sums broken in Quantiles")
 ```
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3-1.png)
 
 *2) Calculate and report the mean and median **total** number of steps taken per day*
 
 I understood this to mean a summary total *per day* as stated as opposed to mean steps per 5 minutes for each day. Therefore, that was easily derived from the reduced dataset above by running 'Summary' on it:
 
-```{r}
+
+```r
 summary(SofSteps)
+```
+
+```
+##          date        steps      
+##  2012-10-01: 1   Min.   :    0  
+##  2012-10-02: 1   1st Qu.: 6778  
+##  2012-10-03: 1   Median :10395  
+##  2012-10-04: 1   Mean   : 9354  
+##  2012-10-05: 1   3rd Qu.:12811  
+##  2012-10-06: 1   Max.   :21194  
+##  (Other)   :55
 ```
 
 The **mean** of steps in that two month period (Oct-Nov) is *9,354* steps per day. 
@@ -59,7 +86,8 @@ After considering daily Average Information, the second part of the assignment s
 
 To answer this part I returned to the original data *fle* and used reshape to get the mean of steps taken using *interval* as factor..
 
-```{r}
+
+```r
 fleMelt <- melt(fle, id = "interval", measure.vars = "steps")
 fmelted <- dcast(fleMelt, na.rm = T, interval ~ variable, mean)
 ```
@@ -68,9 +96,12 @@ which gave me 288 rows of averages, one for each 5 minutes in a 24 hour period.
 
 I went on to plot this data:
 
-```{r}
+
+```r
 plot(fmelted$interval, fmelted$steps, type = "l", xlab = "Intervals (5-minutes/per)", ylab = "Total Steps Averaged frm All Days", main = "Line Graph of Step Frequency per 5-min Block Avgd Across All Days", col = "blue")
 ```
+
+![plot of chunk unnamed-chunk-6](figure/unnamed-chunk-6-1.png)
 
 There is a clear spike in Average steps taken everyday between about the 800th (5-minute) interval and the 1000th.
 
@@ -78,12 +109,17 @@ Going back to the melted dataFrame *fmelted*, I checked to see at which 5-minute
 
 *2) Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?*
 
-```{r}
+
+```r
 maximum <- max(fmelted$steps,na.rm = T)
 grep(maximum, fmelted$steps)
 ```
 
-As postulated from the graph, the 104th row, giving `r maximum` steps on average is the 835th (5-minute) interval, or at 8:35am (since **Intervals** Column is based on a 24hour clock with a step 5 increment).
+```
+## [1] 104
+```
+
+As postulated from the graph, the 104th row, giving 206.1698113 steps on average is the 835th (5-minute) interval, or at 8:35am (since **Intervals** Column is based on a 24hour clock with a step 5 increment).
 
 #### Imputing missing values
 
@@ -91,12 +127,13 @@ Revisiting Raw data after basic analytical yield to see if NAs have a significan
 
 *1) Calculate and report the total number of missing values in the dataset (i.e. the total number of rows with NAs)*
 
-```{r}
+
+```r
 nas <- is.na(fle$steps)
 naCount <- sum(nas)
 ```
 
-Out of a total of 17,568 Observations, `r naCount` are NAs.
+Out of a total of 17,568 Observations, 2304 are NAs.
 
 
 *2) Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.*
@@ -108,7 +145,8 @@ To answer this question, I created a quick function to run the same caculations 
 
 ..with that data: A substituting the 5-minute mean for missing values in that time slot called subMean.
 
-```{r}
+
+```r
 subMean <- function(fle){
         
         library(reshape2)
@@ -136,7 +174,8 @@ Running the same analysis on this Data as with the original data to see if there
 
 I'd made a quick function that integrated the previous task so I ran that:
 
-```{r}
+
+```r
 dfAnalysis <- function(fle){
         
         ## Load Relevant Library
@@ -155,7 +194,23 @@ dfAnalysis <- function(fle){
 }
 
 NewTotal <- dfAnalysis(NewFile)
+```
+
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png)
+
+```r
 summary(NewTotal)
+```
+
+```
+##          date        steps      
+##  2012-10-01: 1   Min.   :   41  
+##  2012-10-02: 1   1st Qu.: 9819  
+##  2012-10-03: 1   Median :10766  
+##  2012-10-04: 1   Mean   :10766  
+##  2012-10-05: 1   3rd Qu.:12811  
+##  2012-10-06: 1   Max.   :21194  
+##  (Other)   :55
 ```
 
 The **mean** with the NA values replaced is 10,766 steps per day.
@@ -179,8 +234,8 @@ It is hard to say if this difference is significant, but it is worth noting sinc
 I wrote a quick funciton to run my NewTotal dataset and return with an added field denoting *'Weekday'* or *'Weekend'* for its respective row. I ran this and ran head for 14 days to check it..
 
 
-```{r}
 
+```r
 WeekdayField <- function(df){
         
         ## transform date Column to class(date)
@@ -243,12 +298,30 @@ NewTotal <- WeekdayField(NewTotal)
 head(NewTotal,14)
 ```
 
+```
+##          date    steps     Day
+## 1  2012-10-01 10766.19 Weekday
+## 2  2012-10-02   126.00 Weekday
+## 3  2012-10-03 11352.00 Weekday
+## 4  2012-10-04 12116.00 Weekday
+## 5  2012-10-05 13294.00 Weekday
+## 6  2012-10-06 15420.00 Weekend
+## 7  2012-10-07 11015.00 Weekend
+## 8  2012-10-08 10766.19 Weekday
+## 9  2012-10-09 12811.00 Weekday
+## 10 2012-10-10  9900.00 Weekday
+## 11 2012-10-11 10304.00 Weekday
+## 12 2012-10-12 17382.00 Weekday
+## 13 2012-10-13 12426.00 Weekend
+## 14 2012-10-14 15098.00 Weekend
+```
+
 *2) Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).*
 
 I wrote a function that calculated the intervals per Weekend/Weekday then plotted that from resulting table:
 
-```{r}
 
+```r
 filterF <- function(df){
         
         ## Load Relevant Library
@@ -281,5 +354,6 @@ filterF <- function(df){
 
 EndingSet <- WeekdayField(NewFile)
 filterF(EndingSet)
-
 ```
+
+![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
